@@ -20,11 +20,9 @@ type Client struct {
 	Text	chan string
 }
 
-var (
-	scanner = bufio.NewScanner(os.Stdin)
-)
+func (c *Client) ReadUsernameInput(f *os.File) error {
+	scanner := bufio.NewScanner(f)
 
-func (c *Client) ReadUsernameInput() {
 	fmt.Print("Enter username: ")
 
 	for scanner.Scan() {
@@ -40,12 +38,17 @@ func (c *Client) ReadUsernameInput() {
 		break
 	}
 
-	if scanner.Err() != nil {
-		log.Println("Error: ", scanner.Err())
+	if err := scanner.Err(); err != nil {
+		log.Println("Error: ", err)
+		return err
 	}
+
+	return nil
 }
 
-func (c *Client) ReadMessageInput() {
+func (c *Client) ReadMessageInput(f *os.File) error {
+	scanner := bufio.NewScanner(f)
+
 	for scanner.Scan() {
 		dt := time.Now().Format("2006/01/02 15:04:05")
 		fmt.Printf("%s %s: ", dt, c.Username)
@@ -57,9 +60,12 @@ func (c *Client) ReadMessageInput() {
 		}
 	}
 
-	if scanner.Err() != nil {
-		log.Println("Error: ", scanner.Err())
+	if err := scanner.Err(); err != nil {
+		log.Println("Error: ", err)
+		return err
 	}
+
+	return nil
 }
 
 func (c *Client) ReceiveHandler() {

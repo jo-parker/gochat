@@ -38,10 +38,10 @@ func main () {
 		Text: text,
 	}
 
-	client.ReadUsernameInput()
+	client.ReadUsernameInput(os.Stdin)
 
 	go client.ReceiveHandler()
-	go client.ReadMessageInput()
+	go client.ReadMessageInput(os.Stdin)
 
 	for {
 		select {
