@@ -4,6 +4,7 @@ import (
 	"log"
 	"fmt"
 	"os"
+	"io"
 	"time"
 	"bufio"
 	"encoding/json"
@@ -13,23 +14,31 @@ import (
 	"github.com/jpparker/gochat/internal/pkg/model"
 )
 
+var (
+	output io.Writer = os.Stdout
+)
+
 type Client struct {
 	Username	string
-	Conn	*websocket.Conn
+	Conn	*ConnShim
 	Done	chan interface{}
 	Text	chan string
+}
+
+type ConnShim struct {
+	*websocket.Conn
 }
 
 func (c *Client) ReadUsernameInput(f *os.File) error {
 	scanner := bufio.NewScanner(f)
 
-	fmt.Print("Enter username: ")
+	fmt.Fprint(output, "Enter username: ")
 
 	for scanner.Scan() {
 		text := scanner.Text()
 		if text == "" {
-			fmt.Println("Username cannot be empty.")
-			fmt.Print("Enter username: ")
+			fmt.Fprintln(output, "Username cannot be empty.")
+			fmt.Fprint(output, "Enter username: ")
 
 			continue
 		}
@@ -51,7 +60,7 @@ func (c *Client) ReadMessageInput(f *os.File) error {
 
 	for scanner.Scan() {
 		dt := time.Now().Format("2006/01/02 15:04:05")
-		fmt.Printf("%s %s: ", dt, c.Username)
+		fmt.Fprintf(output, "%s %s: ", dt, c.Username)
 
 		out := scanner.Text()
 
@@ -69,8 +78,6 @@ func (c *Client) ReadMessageInput(f *os.File) error {
 }
 
 func (c *Client) ReceiveHandler() {
-	defer close(c.Done)
-
 	for {
 		_, data, err := c.Conn.ReadMessage()
 
@@ -85,8 +92,14 @@ func (c *Client) ReceiveHandler() {
 		}
 
 		dt := time.Now().Format("2006/01/02 15:04:05")
-		fmt.Printf("\n%s %s: %s", dt, msg.Username, msg.Text)
+		fmt.Fprintf(output, "\n%s %s: %s", dt, msg.Username, msg.Text)
+
+		if output != os.Stdout {
+			return
+		}
 	}
+
+	close(c.Done)
 }
 
 func (c *Client) SendMessage(text string) error {

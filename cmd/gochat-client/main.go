@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"net/http"
 	"os/signal"
 	"time"
 
@@ -15,7 +16,12 @@ import (
 var (
 	done = make(chan interface{})
 	interrupt = make(chan os.Signal)
-	text = make(chan string)
+	text = make(chan string, 1)
+
+	websocketDefaultDialerDial = func(url string) (*service.ConnShim, *http.Response, error) {
+		conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+		return &service.ConnShim{conn}, nil, err
+	}
 )
 
 func main () {
@@ -26,7 +32,7 @@ func main () {
 	signal.Notify(interrupt, os.Interrupt)
 	socketUrl := os.Getenv("SOCKET_URL")
 
-	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, nil)
+	conn, _, err := websocketDefaultDialerDial(socketUrl)
 	if err != nil {
 		log.Fatalln("Error connecting to GoChat server: ", err)
 	}
