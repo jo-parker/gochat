@@ -22,6 +22,7 @@ var (
 		Text: make(chan string, 1),
 		Conn: &ConnShim{},
 	}
+	buf *bytes.Buffer
 )
 
 func (conn *ConnShim) ReadMessage() (messageType int, p []byte, err error) {
@@ -40,14 +41,19 @@ func (conn *ConnShim) WriteMessage(messageType int, p []byte) error {
 	return nil
 }
 
+func TestMain(m *testing.M) {
+	buf = &bytes.Buffer{}
+	output = buf
+
+	exitVal := m.Run()
+	os.Exit(exitVal)
+}
+
 func TestReadUsernameInputIsEmpty(t *testing.T) {
 	tmpfile, err := writeTempFile("")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	buf := &bytes.Buffer{}
-	output = buf
 
 	if err := client.ReadUsernameInput(tmpfile); err != nil {
 		t.Errorf("ReadUsernameInput failed: %v", err)
@@ -61,9 +67,6 @@ func TestReadUsernameInput(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	buf := &bytes.Buffer{}
-	output = buf
 
 	if err := client.ReadUsernameInput(tmpfile); err != nil {
 		t.Errorf("ReadUsernameInput failed: %v", err)
@@ -91,9 +94,6 @@ func TestReadMessageInput(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	buf := &bytes.Buffer{}
-	output = buf
-
 	if err := client.ReadMessageInput(tmpfile); err != nil {
 		t.Errorf("ReadMessageInput failed: %v", err)
 	}
@@ -104,9 +104,6 @@ func TestReadMessageInput(t *testing.T) {
 func TestReceiveHandler(t *testing.T) {
 	gostub.Stub(&message, objectString)
 
-	buf := &bytes.Buffer{}
-	output = buf
-
 	client.ReceiveHandler()
 
 	assert.True(t, strings.Contains(buf.String(), "test: test message"))
@@ -114,9 +111,6 @@ func TestReceiveHandler(t *testing.T) {
 
 func TestSendMessage(t *testing.T) {
 	client.Username = "test"
-
-	buf := &bytes.Buffer{}
-	output = buf
 
 	client.SendMessage("test message")
 
