@@ -60,18 +60,18 @@ func (s *Server) HandleMessages() {
 func storeInRedis(msg model.Message, rdb *redis.Client) {
 	json, err := json.Marshal(msg)
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("[ERROR] %v", err)
 	}
 
 	if err := rdb.RPush(ctx, "chat_messages", json).Err(); err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("[ERROR] %v", err)
 	}
 }
 
 func sendPreviousMessages(ws *websocket.Conn, rdb *redis.Client) {
 	messages, err := rdb.LRange(ctx, "chat_messages", 0, -1).Result()
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("[ERROR] %v", err)
 	}
 
 	for _, message := range messages {
@@ -84,7 +84,7 @@ func sendPreviousMessages(ws *websocket.Conn, rdb *redis.Client) {
 func messageClient(client *websocket.Conn, msg model.Message) {
 	err := client.WriteJSON(msg)
 	if err != nil {
-		log.Printf("Error: %v", err)
+		log.Printf("[ERROR] %v", err)
 
 		client.Close()
 		delete(clients, client)

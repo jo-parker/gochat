@@ -48,7 +48,7 @@ func (c *Client) ReadUsernameInput(f *os.File) error {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Println("Error: ", err)
+		log.Printf("[ERROR] %v", err)
 		return err
 	}
 
@@ -70,7 +70,7 @@ func (c *Client) ReadMessageInput(f *os.File) error {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Println("Error: ", err)
+		log.Printf("[ERROR] %v", err)
 		return err
 	}
 
@@ -82,13 +82,13 @@ func (c *Client) ReceiveHandler() {
 		_, data, err := c.Conn.ReadMessage()
 
 		if err != nil {
-			log.Println("Error in receive:", err)
+			log.Printf("[ERROR] %v", err)
 			return
 		}
 
 		var msg model.Message
 		if err := json.Unmarshal(data, &msg); err != nil {
-			log.Println(err)
+			log.Printf("[ERROR] %v", err)
 		}
 
 		dt := time.Now().Format("2006/01/02 15:04:05")

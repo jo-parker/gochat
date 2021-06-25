@@ -26,7 +26,7 @@ var (
 
 func main () {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalln(err)
+		log.Fatalf("[ERROR] %v", err)
 	}
 
 	signal.Notify(interrupt, os.Interrupt)
@@ -34,7 +34,7 @@ func main () {
 
 	conn, _, err := websocketDefaultDialerDial(socketUrl)
 	if err != nil {
-		log.Fatalln("Error connecting to GoChat server: ", err)
+		log.Fatalf("[ERROR] Error connecting to GoChat server: %v", err)
 	}
 	defer conn.Close()
 
@@ -55,22 +55,22 @@ func main () {
 			err := client.SendMessage(msg)
 
 			if err != nil {
-				log.Println("Error sending message to WebSocket: ", err)
+				log.Printf("[ERROR] Error sending message to WebSocket: %v", err)
 			}
 		case <- interrupt:
-			log.Println("Received SIGINT interrupt signal. Closing all pending connections")
+			log.Println("[INFO] Received SIGINT interrupt signal. Closing all pending connections")
 
 			err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-					log.Println("Error during closing websocket: ", err)
+					log.Printf("[ERROR] Error during closing websocket: %v", err)
 					return
 			}
 
 			select {
 			case <- client.Done:
-				log.Println("Receiver Channel Closed! Exiting....")
+				log.Println("[INFO] Receiver Channel Closed! Exiting....")
 			case <- time.After(time.Duration(1) * time.Second):
-				log.Println("Timeout in closing receiving channel. Exiting....")
+				log.Println("[ERROR] Timeout in closing receiving channel. Exiting....")
 			}
 			return
 		}

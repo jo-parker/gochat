@@ -31,7 +31,7 @@ func main() {
 	http.HandleFunc("/websocket", server.HandleConnections)
 	go server.HandleMessages()
 
-	log.Println("Web server starting at localhost:"+port)
+	log.Println("[INFO] Web server starting at localhost:"+port)
 	if err := http.ListenAndServe(":" + port, nil); err != nil {
 		log.Fatalln(err)
 	}
